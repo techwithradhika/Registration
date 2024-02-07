@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Data</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registration Data</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date of Birth</th>
+            </tr>
+        </thead>
+        <tbody id="registration-list"></tbody>
+    </table>
+
+    <script>
+        // Function to fetch registration data from the API
+        async function fetchRegistrationData() {
+            const response = await fetch('/register/');
+            const data = await response.json();
+            return data;
+        }
+
+        // Function to display registration data in the UI
+        async function displayRegistrationData() {
+            const registrationList = document.getElementById('registration-list');
+            registrationList.innerHTML = ''; // Clear previous data
+
+            const registrations = await fetchRegistrationData();
+            registrations.forEach(register => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${register.ID}</td>
+                    <td>${register.Name}</td>
+                    <td>${register.Email}</td>
+                    <td>${register.DateOfBirth}</td>
+                `;
+                registrationList.appendChild(row);
+            });
+        }
+
+        // Call the function to display registration data when the page loads
+        displayRegistrationData();
+    </script>
+</body>
+</html>
