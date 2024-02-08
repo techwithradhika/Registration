@@ -1,4 +1,5 @@
 Download the Xammp server, and start both apach and mysql services. click on Admin in mysql which will take you to the localhost of phpmyadmin in the browser.
+
 Download VisualStudio and Python, Clone the Repository "git clone https://github.com/techwithradhika/Registration.git" in terminal from VSC.
 Now first to create the Registration table to store the data in database, open file sql_db.py.
 In terminal navigate to the current folder and install virtual environment "pip install virtualenv", Create new VENV "python -m virtualenv venv", 
