@@ -33,34 +33,178 @@
         <tbody id="registration-list"></tbody>
     </table>
 
+    <h2>Add Registration Data</h2>
+    <form id="registration-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br><br>
+        <label for="dob">Date of Birth:</label>
+        <input type="text" id="dob" name="dob" placeholder="DD/MM/YYYY" required><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Update Registration</h2>
+    <form id="update-registration-form">
+        <label for="update-id">Registration ID:</label>
+        <input type="number" id="update-id" name="update-id" required><br><br>
+        <label for="update-name">New Name:</label>
+        <input type="text" id="update-name" name="update-name"><br><br>
+        <label for="update-email">New Email:</label>
+        <input type="email" id="update-email" name="update-email"><br><br>
+        <label for="update-dob">New Date of Birth:</label>
+        <input type="text" id="update-dob" name="update-dob" placeholder="DD/MM/YYYY"><br><br>
+        <button type="submit">Update Registration Data</button>
+    </form>
+
+    <h2>Delete Registration</h2>
+    <form id="delete-registration-form">
+        <label for="delete-id">Registration ID:</label>
+        <input type="number" id="delete-id" name="delete-id" required><br><br>
+        <button type="submit">Delete Registration</button>
+    </form>
+
+    <h2>Get Registration</h2>
+    <form id="get-registration-form">
+        <label for="get-id">Registration ID:</label>
+        <input type="number" id="get-id" name="get-id" required><br><br>
+        <button type="submit">Get Registration</button>
+    </form>
     <script>
-        // Function to fetch registration data from the API
-        async function fetchRegistrationData() {
-            const response = await fetch('/register/');
+        async function fetchRegistrationData(url) {
+            const response = await fetch(url);
             const data = await response.json();
             return data;
         }
-
-        // Function to display registration data in the UI
         async function displayRegistrationData() {
             const registrationList = document.getElementById('registration-list');
-            registrationList.innerHTML = ''; // Clear previous data
+            registrationList.innerHTML = '';
 
-            const registrations = await fetchRegistrationData();
-            registrations.forEach(register => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${register.ID}</td>
-                    <td>${register.Name}</td>
-                    <td>${register.Email}</td>
-                    <td>${register.DateOfBirth}</td>
-                `;
-                registrationList.appendChild(row);
-            });
+            try {
+                const registrations = await fetchRegistrationData('/register/');
+                registrations.forEach(register => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${register.ID}</td>
+                        <td>${register.Name}</td>
+                        <td>${register.Email}</td>
+                        <td>${register.DateOfBirth}</td>
+                    `;
+                    registrationList.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while fetching registrations. Please try again later.');
+            }
         }
+        document.getElementById('update-registration-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-        // Call the function to display registration data when the page loads
+            const formData = new FormData(event.target);
+            const id = formData.get('update-id');
+            const name = formData.get('update-name');
+            const email = formData.get('update-email');
+            const dob = formData.get('update-dob');
+            try {
+                const response = await fetch(`/register/${id}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Name: name,
+                        Email: email,
+                        DateOfBirth: dob
+                    })
+                });
+                if (response.ok) {
+                    alert('Registration updated successfully!');
+                    event.target.reset();
+                } else {
+                    alert('Failed to update registration. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+
+        document.getElementById('delete-registration-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const id = formData.get('delete-id');
+
+            try {
+                const response = await fetch(`/register/${id}/`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Registration deleted successfully!');
+                    event.target.reset();
+                } else {
+                    alert('Failed to delete registration. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+
+        document.getElementById('get-registration-form').addEventListener('submit', async (event) => {
+            event.preventDefault(); 
+
+            const formData = new FormData(event.target);
+            const id = formData.get('get-id');
+
+            try {
+                const registration = await fetchRegistrationData(`/register/${id}/`);
+                console.log(registration);
+                alert(`Registration ID: ${registration.ID}\nName: ${registration.Name}\nEmail: ${registration.Email}\nDate of Birth: ${registration.DateOfBirth}`);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+
         displayRegistrationData();
+
+        const form = document.getElementById('registration-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const dob = formData.get('dob');
+
+            try {
+                const response = await fetch('/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Name: name,
+                        Email: email,
+                        DateOfBirth: dob
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Registration successful!');
+                    form.reset();
+                    displayRegistrationData();
+                } else {
+                    alert('Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+        const getAllButton = document.getElementById('get-all-registrations');
+        getAllButton.addEventListener('click', displayRegistrationData);
     </script>
 </body>
 </html>

@@ -11,23 +11,18 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 
-# Create FastAPI app instance
 app = FastAPI()
 
-templates_directory = Path("C:/Users/radhi/Downloads/New folder/templates")
-
-# Mount the "templates" directory as a static directory to serve HTML files
+# replace the path to the templates directory
+templates_directory = Path("C:/Users/radhi/Downloads/New folder/templates") 
 app.mount("/static", StaticFiles(directory=templates_directory), name="static")
 
-# Database connection
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:@localhost:3306/Registration"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for ORM models
 Base = declarative_base()
 
-# Register ORM model
 class Register(Base):
     __tablename__ = 'Register'
 
@@ -36,23 +31,19 @@ class Register(Base):
     Email = Column(String(255), nullable=False)
     DateOfBirth = Column(String(10))
 
-# Pydantic model for input data validation
 class RegisterCreate(BaseModel):
     Name: str
     Email: str
     DateOfBirth: str
 
-# Pydantic model for response
 class RegisterResponse(BaseModel):
     ID: int
     Name: str
     Email: str
     DateOfBirth: str
 
-# Create table if not exists
 Base.metadata.create_all(bind=engine)
 
-# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -60,7 +51,6 @@ def get_db():
     finally:
         db.close()
 
-# Create a new registration
 @app.post("/register/", response_model=RegisterResponse)
 def create_register(register: RegisterCreate, db: Session = Depends(get_db)):
     try:
@@ -69,15 +59,12 @@ def create_register(register: RegisterCreate, db: Session = Depends(get_db)):
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format. Please provide the date in the format 'DD/MM/YYYY'.")
 
-        # Create a new Register object with the parsed date
         db_register = Register(Name=register.Name, Email=register.Email, DateOfBirth=date_of_birth)
         db.add(db_register)
         db.commit()
         db.refresh(db_register)
-
         db_register_dict = db_register.__dict__.copy()
         db_register_dict["DateOfBirth"] = register.DateOfBirth
-
         return RegisterResponse(**db_register_dict)
     except IntegrityError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
@@ -92,20 +79,16 @@ def read_all_registers(db: Session = Depends(get_db)):
         register_list.append(RegisterResponse(**register_dict))
     return register_list
 
-# Retrieve a registration by ID
 @app.get("/register/{register_id}/", response_model=RegisterResponse)
 def read_register(register_id: int, db: Session = Depends(get_db)):
     db_register = db.query(Register).filter(Register.ID == register_id).first()
     if db_register is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Register not found")
     
-    # Convert DateOfBirth to string
     db_register_dict = db_register.__dict__.copy()
     db_register_dict["DateOfBirth"] = str(db_register_dict["DateOfBirth"])
-    
     return RegisterResponse(**db_register_dict) 
 
-# Update a registration by ID
 @app.put("/register/{register_id}/", response_model=RegisterResponse)
 def update_register(register_id: int, register: RegisterCreate, db: Session = Depends(get_db)):
     try:
@@ -113,7 +96,6 @@ def update_register(register_id: int, register: RegisterCreate, db: Session = De
         if db_register is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Register not found")
         
-        # Attempt to parse the date string
         try:
             date_of_birth = datetime.strptime(register.DateOfBirth, "%d/%m/%Y").date()
         except ValueError:
@@ -124,15 +106,12 @@ def update_register(register_id: int, register: RegisterCreate, db: Session = De
         db_register.DateOfBirth = date_of_birth
         db.commit()
         db.refresh(db_register)
-        
         db_register_dict = db_register.__dict__.copy()
         db_register_dict["DateOfBirth"] = register.DateOfBirth
-
         return RegisterResponse(**db_register_dict)
     except IntegrityError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-# Delete a registration by ID
 @app.delete("/register/{register_id}/", response_model=RegisterResponse)
 def delete_register(register_id: int, db: Session = Depends(get_db)):
     try:
@@ -144,7 +123,6 @@ def delete_register(register_id: int, db: Session = Depends(get_db)):
         db.commit()
         db_register_dict = db_register.__dict__.copy()
         db_register_dict["DateOfBirth"] = str(db_register_dict["DateOfBirth"])
-
         return RegisterResponse(**db_register_dict)    
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
